@@ -438,18 +438,18 @@ export async function withInteractiveWithAuthResponse(options?: InteractiveLogin
     });
   });
 
-  function getSubscriptions(creds: DeviceTokenCredentials, tenants: string[]): Promise<LinkedSubscription[]> {
-    if (!(interactiveOptions.tokenAudience && interactiveOptions.tokenAudience === TokenAudience.graph)) {
-      return getSubscriptionsFromTenants(creds, tenants);
-    }
-    return Promise.resolve(([] as any[]));
-  }
-
-  return getUserCode.then(() => {
+  function tryAcquireToken(userCodeResponse: any): Promise<DeviceTokenCredentials> {
     return new Promise<DeviceTokenCredentials>((resolve, reject) => {
       return authContext.acquireTokenWithDeviceCode(interactiveOptions.environment.activeDirectoryResourceId, interactiveOptions.clientId, userCodeResponse, (error: Error, tokenResponse: any) => {
         if (error) {
-          return reject(error);
+          if ((error as any).error === "authorization_pending") {
+            setTimeout(() => {
+              return tryAcquireToken(userCodeResponse);
+            }, 1000);
+          }
+          else {
+            return reject(error);
+          }
         }
         interactiveOptions.userName = tokenResponse.userId;
         interactiveOptions.authorizationScheme = tokenResponse.tokenType;
@@ -462,6 +462,17 @@ export async function withInteractiveWithAuthResponse(options?: InteractiveLogin
         return resolve(creds);
       });
     });
+  }
+
+  function getSubscriptions(creds: DeviceTokenCredentials, tenants: string[]): Promise<LinkedSubscription[]> {
+    if (!(interactiveOptions.tokenAudience && interactiveOptions.tokenAudience === TokenAudience.graph)) {
+      return getSubscriptionsFromTenants(creds, tenants);
+    }
+    return Promise.resolve(([] as any[]));
+  }
+
+  return getUserCode.then((userCodeResponse) => {
+    return tryAcquireToken(userCodeResponse);
   }).then((creds) => {
     return buildTenantList(creds);
   }).then((tenants) => {

@@ -343,17 +343,18 @@ function withInteractiveWithAuthResponse(options) {
                 return resolve(userCodeResponse);
             });
         });
-        function getSubscriptions(creds, tenants) {
-            if (!(interactiveOptions.tokenAudience && interactiveOptions.tokenAudience === authConstants_1.TokenAudience.graph)) {
-                return subscriptionUtils_1.getSubscriptionsFromTenants(creds, tenants);
-            }
-            return Promise.resolve([]);
-        }
-        return getUserCode.then(() => {
+        function tryAcquireToken(userCodeResponse) {
             return new Promise((resolve, reject) => {
                 return authContext.acquireTokenWithDeviceCode(interactiveOptions.environment.activeDirectoryResourceId, interactiveOptions.clientId, userCodeResponse, (error, tokenResponse) => {
                     if (error) {
-                        return reject(error);
+                        if (error.error === "authorization_pending") {
+                            setTimeout(() => {
+                                return tryAcquireToken(userCodeResponse);
+                            }, 1000);
+                        }
+                        else {
+                            return reject(error);
+                        }
                     }
                     interactiveOptions.userName = tokenResponse.userId;
                     interactiveOptions.authorizationScheme = tokenResponse.tokenType;
@@ -366,6 +367,15 @@ function withInteractiveWithAuthResponse(options) {
                     return resolve(creds);
                 });
             });
+        }
+        function getSubscriptions(creds, tenants) {
+            if (!(interactiveOptions.tokenAudience && interactiveOptions.tokenAudience === authConstants_1.TokenAudience.graph)) {
+                return subscriptionUtils_1.getSubscriptionsFromTenants(creds, tenants);
+            }
+            return Promise.resolve([]);
+        }
+        return getUserCode.then((userCodeResponse) => {
+            return tryAcquireToken(userCodeResponse);
         }).then((creds) => {
             return subscriptionUtils_1.buildTenantList(creds);
         }).then((tenants) => {
