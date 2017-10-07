@@ -36,10 +36,12 @@
   "devDependencies": {
     "@types/mocha": "^2.2.40",
     "@types/should": "^8.1.30",
+    "@types/nock": "^8.2.1",
     "mocha": "^3.2.0",
     "should": "5.2.0",
     "tslint": "^5.2.0",
-    "typescript": "^2.5.2"
+    "typescript": "^2.5.2",
+    "nock": "^9.0.22"
   },
   "homepage": "https://github.com/Azure/ms-rest-nodeauth",
   "repository": {
@@ -51,7 +53,7 @@
   },
   "scripts": {
     "tsc": "tsc -p tsconfig.json",
-    "test": "npm -s run-script tslint",
+    "test": "npm -s run-script tslint && npm -s run-script unit",
     "unit": "mocha -t 50000 dist/test",
     "build": "npm -s run-script tsc",
     "tslint": "tslint -p . -c tslint.json --exclude test/**/*.ts"

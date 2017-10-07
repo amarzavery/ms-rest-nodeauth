@@ -451,7 +451,7 @@ export async function withInteractiveWithAuthResponse(options?: InteractiveLogin
         if (error) {
           return reject(error);
         }
-        interactiveOptions.username = tokenResponse.userId;
+        interactiveOptions.userName = tokenResponse.userId;
         interactiveOptions.authorizationScheme = tokenResponse.tokenType;
         try {
           creds = new DeviceTokenCredentials(interactiveOptions.clientId, interactiveOptions.domain, interactiveOptions.userName,
@@ -689,18 +689,17 @@ export function withUsernamePassword(username: string, password: string, options
 /**
  * Initializes MSITokenCredentials class and calls getToken and returns a token response.
  *
- * @param {string} domain - required. The tenant id.
  * @param {object} options - Optional parameters
  * @param {string} [options.port] - port on which the MSI service is running on the host VM. Default port is 50342
  * @param {string} [options.resource] - The resource uri or token audience for which the token is needed. Default - "https://management.azure.com"
  * @param {string} [options.aadEndpoint] - The add endpoint for authentication. default - "https://login.microsoftonline.com"
  * @param {any} callback - the callback function.
  */
-function _withMSI(domain: string, options?: LoginWithMSIOptions): Promise<MSITokenResponse> {
+function _withMSI(options?: LoginWithMSIOptions): Promise<MSITokenResponse> {
   if (!options) {
     options = {};
   }
-  const creds = new MSITokenCredentials(domain, options.port, options.resource, options.aadEndpoint);
+  const creds = new MSITokenCredentials(options.port, options.resource);
   return creds.getToken();
 }
 
@@ -723,7 +722,6 @@ function _withMSI(domain: string, options?: LoginWithMSIOptions): Promise<MSITok
  * This method makes a request to the authentication service hosted on the VM
  * and gets back an access token.
  *
- * @param {string} [domain] - The domain or tenant id. This is a required parameter.
  * @param {object} [options] - Optional parameters
  * @param {string} [options.port] - port on which the MSI service is running on the host VM. Default port is 50342
  * @param {string} [options.resource] - The resource uri or token audience for which the token is needed.
@@ -742,20 +740,20 @@ function _withMSI(domain: string, options?: LoginWithMSIOptions): Promise<MSITok
  *             @resolve {MSITokenResponse} - The tokenResponse.
  *             @reject {Error} - The error object.
  */
-export function withMSI(domain: string): Promise<MSITokenResponse>;
-export function withMSI(domain: string, options: LoginWithMSIOptions): Promise<MSITokenResponse>;
-export function withMSI(domain: string, options: LoginWithMSIOptions, callback: { (err: Error, credentials: MSITokenResponse): void }): void;
-export function withMSI(domain: string, callback: any): any;
-export function withMSI(domain: string, options?: LoginWithMSIOptions, callback?: { (err: Error, credentials: MSITokenResponse): void }): any {
+export function withMSI(): Promise<MSITokenResponse>;
+export function withMSI(options: LoginWithMSIOptions): Promise<MSITokenResponse>;
+export function withMSI(options: LoginWithMSIOptions, callback: { (err: Error, credentials: MSITokenResponse): void }): void;
+export function withMSI(dcallback: any): any;
+export function withMSI(options?: LoginWithMSIOptions, callback?: { (err: Error, credentials: MSITokenResponse): void }): any {
   if (!callback && typeof options === "function") {
     callback = options;
     options = {};
   }
   const cb = callback as Function;
   if (!callback) {
-    return _withMSI(domain, options);
+    return _withMSI(options);
   } else {
-    msRest.promiseToCallback(_withMSI(domain, options))((err: Error, tokenRes: MSITokenResponse) => {
+    msRest.promiseToCallback(_withMSI(options))((err: Error, tokenRes: MSITokenResponse) => {
       if (err) {
         return cb(err);
       }

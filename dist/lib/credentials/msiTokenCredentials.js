@@ -18,40 +18,26 @@ const msRest = require("ms-rest-js");
 class MSITokenCredentials {
     constructor(
         /**
-         * @property {string} domain - The domain or tenant id for which the token is required.
-         */
-        domain, 
-        /**
          * @property {number} port - Port on which the MSI service is running on the host VM. Default port is 50342
          */
         port = 50342, 
         /**
          * @property {string} resource - The resource uri or token audience for which the token is needed.
          * For e.g. it can be:
-         * - resourcemanagement endpoint "https://management.azure.com"(default)
+         * - resourcemanagement endpoint "https://management.azure.com/"(default)
          * - management endpoint "https://management.core.windows.net/"
          */
-        resource = "https://management.azure.com", 
-        /**
-         * @property {string} aadEndpoint - The add endpoint for authentication. default - "https://login.microsoftonline.com"
-         */
-        aadEndpoint = "https://login.microsoftonline.com") {
-        this.domain = domain;
+        resource = "https://management.azure.com/") {
         this.port = port;
         this.resource = resource;
-        this.aadEndpoint = aadEndpoint;
-        if (!Boolean(domain) || typeof domain.valueOf() !== "string") {
-            throw new TypeError("domain must be a non empty string.");
-        }
         if (typeof port.valueOf() !== "number") {
             throw new Error("port must be a number.");
         }
         if (typeof resource.valueOf() !== "string") {
             throw new Error("resource must be a uri of type string.");
         }
-        if (typeof aadEndpoint.valueOf() !== "string") {
-            throw new Error("aadEndpoint must be a uri of type string.");
-        }
+        this.port = port;
+        this.resource = resource;
     }
     /**
      * Prepares and sends a POST request to a service endpoint hosted on the Azure VM, which responds with the access token.
@@ -84,15 +70,13 @@ class MSITokenCredentials {
     }
     prepareRequestOptions() {
         const resource = encodeURIComponent(this.resource);
-        const aadEndpoint = encodeURIComponent(this.aadEndpoint);
-        const forwardSlash = encodeURIComponent("/");
         const reqOptions = {
             url: `http://localhost:${this.port}/oauth2/token`,
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 "Metadata": "true"
             },
-            body: `authority=${aadEndpoint}${forwardSlash}${this.domain}&resource=${resource}`,
+            body: `resource=${resource}`,
             method: "POST"
         };
         return reqOptions;
@@ -107,7 +91,7 @@ class MSITokenCredentials {
     signRequest(webResource) {
         return __awaiter(this, void 0, void 0, function* () {
             const tokenResponse = yield this.getToken();
-            webResource.headers[msRest.Constants.HeaderConstants.AUTHORIZATION] = `${tokenResponse.tokenType} ${tokenResponse.accessToken}`;
+            webResource.headers[msRest.Constants.HeaderConstants.AUTHORIZATION] = `${tokenResponse.token_type} ${tokenResponse.access_token}`;
             return Promise.resolve(webResource);
         });
     }

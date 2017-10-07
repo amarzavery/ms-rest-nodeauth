@@ -471,31 +471,30 @@ exports.withUsernamePassword = withUsernamePassword;
 /**
  * Initializes MSITokenCredentials class and calls getToken and returns a token response.
  *
- * @param {string} domain - required. The tenant id.
  * @param {object} options - Optional parameters
  * @param {string} [options.port] - port on which the MSI service is running on the host VM. Default port is 50342
  * @param {string} [options.resource] - The resource uri or token audience for which the token is needed. Default - "https://management.azure.com"
  * @param {string} [options.aadEndpoint] - The add endpoint for authentication. default - "https://login.microsoftonline.com"
  * @param {any} callback - the callback function.
  */
-function _withMSI(domain, options) {
+function _withMSI(options) {
     if (!options) {
         options = {};
     }
-    const creds = new msiTokenCredentials_1.MSITokenCredentials(domain, options.port, options.resource, options.aadEndpoint);
+    const creds = new msiTokenCredentials_1.MSITokenCredentials(options.port, options.resource);
     return creds.getToken();
 }
-function withMSI(domain, options, callback) {
+function withMSI(options, callback) {
     if (!callback && typeof options === "function") {
         callback = options;
         options = {};
     }
     const cb = callback;
     if (!callback) {
-        return _withMSI(domain, options);
+        return _withMSI(options);
     }
     else {
-        msRest.promiseToCallback(_withMSI(domain, options))((err, tokenRes) => {
+        msRest.promiseToCallback(_withMSI(options))((err, tokenRes) => {
             if (err) {
                 return cb(err);
             }

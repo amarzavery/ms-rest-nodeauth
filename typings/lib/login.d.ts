@@ -345,7 +345,6 @@ export declare function withUsernamePassword(username: string, password: string,
  * This method makes a request to the authentication service hosted on the VM
  * and gets back an access token.
  *
- * @param {string} [domain] - The domain or tenant id. This is a required parameter.
  * @param {object} [options] - Optional parameters
  * @param {string} [options.port] - port on which the MSI service is running on the host VM. Default port is 50342
  * @param {string} [options.resource] - The resource uri or token audience for which the token is needed.
@@ -364,9 +363,9 @@ export declare function withUsernamePassword(username: string, password: string,
  *             @resolve {MSITokenResponse} - The tokenResponse.
  *             @reject {Error} - The error object.
  */
-export declare function withMSI(domain: string): Promise<MSITokenResponse>;
-export declare function withMSI(domain: string, options: LoginWithMSIOptions): Promise<MSITokenResponse>;
-export declare function withMSI(domain: string, options: LoginWithMSIOptions, callback: {
+export declare function withMSI(): Promise<MSITokenResponse>;
+export declare function withMSI(options: LoginWithMSIOptions): Promise<MSITokenResponse>;
+export declare function withMSI(options: LoginWithMSIOptions, callback: {
     (err: Error, credentials: MSITokenResponse): void;
 }): void;
-export declare function withMSI(domain: string, callback: any): any;
+export declare function withMSI(dcallback: any): any;

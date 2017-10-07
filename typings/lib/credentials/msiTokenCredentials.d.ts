@@ -22,29 +22,17 @@ export interface MSITokenResponse {
  */
 export declare class MSITokenCredentials {
     /**
-     * @property {string} domain - The domain or tenant id for which the token is required.
-     */
-    domain: string;
-    /**
      * @property {number} port - Port on which the MSI service is running on the host VM. Default port is 50342
      */
     port: number;
     /**
      * @property {string} resource - The resource uri or token audience for which the token is needed.
      * For e.g. it can be:
-     * - resourcemanagement endpoint "https://management.azure.com"(default)
+     * - resourcemanagement endpoint "https://management.azure.com/"(default)
      * - management endpoint "https://management.core.windows.net/"
      */
     resource: string;
-    /**
-     * @property {string} aadEndpoint - The add endpoint for authentication. default - "https://login.microsoftonline.com"
-     */
-    aadEndpoint: string;
     constructor(
-        /**
-         * @property {string} domain - The domain or tenant id for which the token is required.
-         */
-        domain: string, 
         /**
          * @property {number} port - Port on which the MSI service is running on the host VM. Default port is 50342
          */
@@ -52,14 +40,10 @@ export declare class MSITokenCredentials {
         /**
          * @property {string} resource - The resource uri or token audience for which the token is needed.
          * For e.g. it can be:
-         * - resourcemanagement endpoint "https://management.azure.com"(default)
+         * - resourcemanagement endpoint "https://management.azure.com/"(default)
          * - management endpoint "https://management.core.windows.net/"
          */
-        resource?: string, 
-        /**
-         * @property {string} aadEndpoint - The add endpoint for authentication. default - "https://login.microsoftonline.com"
-         */
-        aadEndpoint?: string);
+        resource?: string);
     /**
      * Prepares and sends a POST request to a service endpoint hosted on the Azure VM, which responds with the access token.
      * @param  {function} callback  The callback in the form (err, result)
