@@ -92,12 +92,10 @@ If you want to create the sp for a different cloud/environment then please execu
 1. az cloud list
 2. az cloud set –n <name of the environment>
 3. az ad sp create-for-rbac --sdk-auth > auth.json // create sp with **secret**.
-  
-          OR
-          
+          **OR** 
    az ad sp create-for-rbac --create-cert --sdk-auth > auth.json // create sp with **certificate**.
 If the service principal is already created then login with service principal info:
-4. az login --service-principal -u `<clientId>` -p `<clientSecret>` -t `<tenantId>`
+4. az login --service-principal -u <clientId> -p <clientSecret> -t <tenantId>
 5. az account show --sdk-auth > auth.json
 
 ```typescript
@@ -143,6 +141,57 @@ msRestNodeAuth.loginWithAppServiceMSI(options).then((msiTokenRes) => {
 }).catch((err) => {
   console.log(err);
 });
+```
+
+### Getting credentials via Azure CLI.
+
+**Pre-requisite**
+- **Install azure-cli**. For more information see [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+- **Login via `az login`**
+
+```typescript
+import { AzureCliCredentials } from "@azure/ms-rest-nodeauth";
+import { ServiceClient, RequestPrepareOptions } from "@azure/ms-rest-js";
+
+async function main(): Promise<void> {
+  try {
+    // Please make sure you have logged in via Azure CLI `az login` before executing this script.
+    const creds = await AzureCliCredentials.create();
+    const client = new ServiceClient(creds);
+    console.log(">>> Subscription associated with the access token: '%s'.",
+      creds.tokenInfo.subscription);
+    const request: RequestPrepareOptions = {
+      url: getUrl(creds.subscriptionInfo.id),
+      method: "GET"
+    };
+    console.log(">>> Request url: '%s'.", request.url);
+    const res = await client.sendRequest(request);
+    console.log("List of resource groups from subscriptionId '%s': \n%O",
+      creds.subscriptionInfo.id, res.parsedBody);
+
+    // Let us change the subscriptionId, which should trigger refreshing the access token.
+    const subscriptions = await AzureCliCredentials.listAllSubscriptions();
+    creds.subscriptionInfo = subscriptions[1];
+    console.log(">>> The new subscription id associated with the credential object is: '%s'.",
+      creds.subscriptionInfo.id);
+    request.url = getUrl(creds.subscriptionInfo.id);
+    console.log(">>> Request url: '%s'.", request.url);
+    const res2 = await client.sendRequest(request);
+    console.log("List of resource groups from subscriptionId '%s': \n%O",
+      creds.subscriptionInfo.id, res2.parsedBody);
+    console.log(">>> Subscription associated with the access token: '%s'.",
+      creds.tokenInfo.subscription);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function getUrl(subscriptionId: string): string {
+  return `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups?api-version=2018-05-01`;
+}
+
+main();
+
 ```
 
 ### Contributing

@@ -3,6 +3,8 @@
 
 import * as adal from "adal-node";
 import * as msRest from "@azure/ms-rest-js";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { readFileSync } from "fs";
 import { Environment } from "@azure/ms-rest-azure-env";
 import { TokenCredentialsBase } from "./credentials/tokenCredentialsBase";
@@ -15,6 +17,8 @@ import { buildTenantList, getSubscriptionsFromTenants, LinkedSubscription } from
 import { MSIVmTokenCredentials, MSIVmOptions } from "./credentials/msiVmTokenCredentials";
 import { MSIAppServiceTokenCredentials, MSIAppServiceOptions } from "./credentials/msiAppServiceTokenCredentials";
 import { MSITokenResponse } from "./credentials/msiTokenCredentials";
+
+const execPromise = promisify(exec);
 
 function turnOnLogging() {
   const log = adal.Logging;
@@ -940,5 +944,17 @@ export function loginWithAppServiceMSI(options?: MSIAppServiceOptions | Callback
       }
       return cb(undefined, tokenRes);
     });
+  }
+}
+
+/**
+ * Executes the az cli command and returns the result undefined if the command did not return any
+ * thing or a JSON object if the command did return something.
+ * @param cmd The az cli command to execute.
+ */
+export async function execAz(cmd: string): Promise<any> {
+  const result = await execPromise(`az ${cmd}`, { encoding: "utf8" });
+  if (result.stdout) {
+    return JSON.parse(result.stdout);
   }
 }
